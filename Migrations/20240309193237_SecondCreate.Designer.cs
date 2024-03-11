@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -10,9 +11,10 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace TunaPiano.Migrations
 {
     [DbContext(typeof(TunaPianoDbContext))]
-    partial class TunaPianoDbContextModelSnapshot : ModelSnapshot
+    [Migration("20240309193237_SecondCreate")]
+    partial class SecondCreate
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -186,10 +188,10 @@ namespace TunaPiano.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
-                    b.Property<int>("Artist_Id")
+                    b.Property<int?>("ArtistId")
                         .HasColumnType("integer");
 
-                    b.Property<int?>("ArtistsId")
+                    b.Property<int>("Artist_Id")
                         .HasColumnType("integer");
 
                     b.Property<int>("Length")
@@ -201,7 +203,7 @@ namespace TunaPiano.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("ArtistsId");
+                    b.HasIndex("ArtistId");
 
                     b.ToTable("Songs");
 
@@ -257,9 +259,11 @@ namespace TunaPiano.Migrations
 
             modelBuilder.Entity("TunaPiano.Models.Songs", b =>
                 {
-                    b.HasOne("TunaPiano.Models.Artists", null)
+                    b.HasOne("TunaPiano.Models.Artists", "Artist")
                         .WithMany("Song")
-                        .HasForeignKey("ArtistsId");
+                        .HasForeignKey("ArtistId");
+
+                    b.Navigation("Artist");
                 });
 
             modelBuilder.Entity("TunaPiano.Models.Artists", b =>
