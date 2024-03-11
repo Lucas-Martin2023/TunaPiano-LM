@@ -34,29 +34,172 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 
-var summaries = new[]
+// SONGS
+// Create a Song
+app.MapPost("/api/songs", (TunaPianoDbContext db, Songs newSong) =>
 {
-    "Freezing", "Bracing", "Chilly", "Cool", "Mild", "Warm", "Balmy", "Hot", "Sweltering", "Scorching"
-};
+    db.Songs.Add(newSong);
+    db.SaveChanges();
+    return Results.Created($"/api/songs/{newSong.Id}", newSong);
+});
 
-app.MapGet("/weatherforecast", () =>
+// Delete a single Song
+app.MapDelete("/api/songs/{id}", (TunaPianoDbContext db, int id) =>
 {
-    var forecast =  Enumerable.Range(1, 5).Select(index =>
-        new WeatherForecast
-        (
-            DateOnly.FromDateTime(DateTime.Now.AddDays(index)),
-            Random.Shared.Next(-20, 55),
-            summaries[Random.Shared.Next(summaries.Length)]
-        ))
-        .ToArray();
-    return forecast;
-})
-.WithName("GetWeatherForecast")
-.WithOpenApi();
+    Songs songs = db.Songs.SingleOrDefault(songs => songs.Id == id);
+    if (songs == null)
+    {
+        return Results.NotFound();
+    }
+    db.Songs.Remove(songs);
+    db.SaveChanges();
+    return Results.NoContent();
+});
+
+// Update a Song
+app.MapPut("/api/songs/{id}", (TunaPianoDbContext db, int id, Songs songs) =>
+{
+    Songs songToUpdate = db.Songs.SingleOrDefault(songs => songs.Id == id);
+    if (songToUpdate == null)
+    {
+        return Results.NotFound();
+    }
+    songToUpdate.Title = songs.Title;
+    songToUpdate.Artist_Id = songs.Artist_Id;
+    songToUpdate.Album = songs.Album;
+    songToUpdate.Length = songs.Length;
+
+    db.SaveChanges();
+    return Results.NoContent();
+});
+
+// Gets list of all Songs
+app.MapGet("/api/songs", (TunaPianoDbContext db) =>
+{
+    return db.Songs.ToList();
+});
+
+// Details View of single song and associated genres and artist details
+app.MapGet("/api/songs/{id}", (TunaPianoDbContext db, int id) =>
+{
+    var song = db.Songs
+        .Include(s => s.Genre)
+        .FirstOrDefault(sg => sg.Id == id);
+
+    var artist = from artists in db.Artists
+                 join songs in db.Songs on artists.Id equals songs.Artist_Id
+                 select artists;
+
+    var songDetails = new { song, artist };
+
+    return songDetails;
+});
+
+
+
+// ARTISTS
+// Create a Artist
+app.MapPost("/api/artists", (TunaPianoDbContext db, Artists newArtist) =>
+{
+    db.Artists.Add(newArtist);
+    db.SaveChanges();
+    return Results.Created($"/api/artists/{newArtist.Id}", newArtist);
+});
+
+// Delete a single Artist
+app.MapDelete("/api/artists/{id}", (TunaPianoDbContext db, int id) =>
+{
+    Artists artists = db.Artists.SingleOrDefault(artists => artists.Id == id);
+    if (artists == null)
+    {
+        return Results.NotFound();
+    }
+    db.Artists.Remove(artists);
+    db.SaveChanges();
+    return Results.NoContent();
+});
+
+// Update a Artist
+app.MapPut("/api/artists/{id}", (TunaPianoDbContext db, int id, Artists artists) =>
+{
+    Artists artistToUpdate = db.Artists.SingleOrDefault(artists => artists.Id == id);
+    if (artistToUpdate == null)
+    {
+        return Results.NotFound();
+    }
+    artistToUpdate.Name = artists.Name;
+    artistToUpdate.Age = artists.Age;
+    artistToUpdate.Bio = artists.Bio;
+
+    db.SaveChanges();
+    return Results.NoContent();
+});
+
+// Gets list of all Artists
+app.MapGet("/api/artists", (TunaPianoDbContext db) =>
+{
+    return db.Artists.ToList();
+});
+
+// Gets Details view of single Artist and the songs associated with them
+app.MapGet("/api/artists/{id}", (TunaPianoDbContext db, int id) =>
+{
+    var singleArtistWithSongs = from artist in db.Artists
+                         join song in db.Songs on artist.Id equals song.Artist_Id
+                         where artist.Id == id
+                         select new { artist, song };
+    return singleArtistWithSongs;
+});
+
+
+
+// GENRES
+// Create a Genre
+app.MapPost("/api/genres", (TunaPianoDbContext db, Genres newGenre) =>
+{
+    db.Genres.Add(newGenre);
+    db.SaveChanges();
+    return Results.Created($"/api/genres/{newGenre.Id}", newGenre);
+});
+
+// Delete a single Genre
+app.MapDelete("/api/genres/{id}", (TunaPianoDbContext db, int id) =>
+{
+    Genres genres = db.Genres.SingleOrDefault(genres => genres.Id == id);
+    if (genres == null)
+    {
+        return Results.NotFound();
+    }
+    db.Genres.Remove(genres);
+    db.SaveChanges();
+    return Results.NoContent();
+});
+
+// Update a Genre
+app.MapPut("/api/genres/{id}", (TunaPianoDbContext db, int id, Genres genres) =>
+{
+    Genres genreToUpdate = db.Genres.SingleOrDefault(genres => genres.Id == id);
+    if (genreToUpdate == null)
+    {
+        return Results.NotFound();
+    }
+    genreToUpdate.Description = genres.Description;
+
+    db.SaveChanges();
+    return Results.NoContent();
+});
+
+// Gets list of all Genre
+app.MapGet("/api/genres", (TunaPianoDbContext db) =>
+{
+    return db.Genres.ToList();
+});
+
+// Gets Details view of a single Genre and the songs associated with it
+app.MapGet("/api/genres/{id}", (TunaPianoDbContext db, int id) =>
+{
+    var singleGenreWithSongs = db.Genres.Include(g => g.Song).FirstOrDefault(g => g.Id == id);
+    return singleGenreWithSongs;
+});
 
 app.Run();
-
-record WeatherForecast(DateOnly Date, int TemperatureC, string? Summary)
-{
-    public int TemperatureF => 32 + (int)(TemperatureC / 0.5556);
-}

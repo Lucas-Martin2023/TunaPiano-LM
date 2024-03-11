@@ -7,7 +7,6 @@ public class TunaPianoDbContext : DbContext
 
     public DbSet<Artists> Artists { get; set; }
     public DbSet<Genres> Genres { get; set; }
-    public DbSet<Song_genre> Song_genre { get; set; }
     public DbSet<Songs> Songs { get; set; }
 
     public TunaPianoDbContext(DbContextOptions<TunaPianoDbContext> context) : base(context)
@@ -40,14 +39,6 @@ public class TunaPianoDbContext : DbContext
         new Genres {Id = 2, Description = "Rock"},
         new Genres {Id = 3, Description = "Country"},
         new Genres {Id = 4, Description = "Pop"}
-        });
-
-        modelBuilder.Entity<Song_genre>().HasData(new Song_genre[]
-        {
-        new Song_genre {Id = 1, Song_id = 1, Genre_id = 1},
-        new Song_genre {Id = 2, Song_id = 2, Genre_id = 2},
-        new Song_genre {Id = 3, Song_id = 3, Genre_id = 3},
-        new Song_genre {Id = 4, Song_id = 4, Genre_id = 4}
         });
     }
 }
